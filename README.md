@@ -1,3 +1,4 @@
+__Note__: See `classifcation.ipynb` and `visualization.ipynb` to setup Google Colab for using this repo.
 # Before Name-calling: Dynamics and Triggers of Ad Hominem Fallacies in Web Argumentation
 
 Code and data for NAACL 2018 paper "Before Name-calling: Dynamics and Triggers of Ad Hominem Fallacies in Web Argumentation" by Ivan Habernal, Henning Wachsmuth, Iryna Gurevych, and Benno Stein. Paper PDF available at ACL Anthology: http://aclweb.org/anthology/N18-1036
