@@ -142,8 +142,15 @@ class Visualization:
 if __name__ == "__main__":
     token_counter = 0
     vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
-    Visualization().print_fold_latex("visualization-context3/fold1.json",
-                                     "/tmp/temp1.tex", vocabulary)
-    Visualization().print_fold_latex("visualization-context3/fold2.json",
-                                     "/tmp/temp2.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold1.json", "temp1.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold2.json", "temp2.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold3.json", "temp3.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold4.json", "temp4.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold5.json", "temp5.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold6.json", "temp6.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold7.json", "temp7.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold8.json", "temp8.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold9.json", "temp9.tex", vocabulary)
+    Visualization().print_fold_latex("visualization-context3/fold10.json", "temp10.tex", vocabulary)
+
     print(token_counter)
