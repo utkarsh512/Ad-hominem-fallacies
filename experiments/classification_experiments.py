@@ -1,3 +1,5 @@
+# modified for GPU by Utkarsh Patel
+
 from classifiers import AbstractTokenizedDocumentClassifier
 from embeddings import WordEmbeddings
 from nnclassifiers import StackedLSTMTokenizedDocumentClassifier, CNNTokenizedDocumentClassifier
@@ -66,31 +68,52 @@ class ClassificationExperiment:
         return result
 
 def cross_validation_ah(model_type):
-  import random
-  random.seed(1234567)
+    # classification without context
+    import random
+    random.seed(1234567)
 
-  import tensorflow as tf
-
-  if tf.test.is_gpu_available():
-    strategy = tf.distribute.MirroredStrategy()
-    print('Using GPU')
-  else:
-    raise ValueError('CPU not recommended.')
-
-  with strategy.scope():
-    vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
-    embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
-    reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
-    e = None
-    if model_type == 'cnn':
-        e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+    import tensorflow as tf
+    if tf.test.is_gpu_available():
+        strategy = tf.distribute.MirroredStrategy()
+        print('Using GPU')
     else:
-        e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
-    e.run()
+        raise ValueError('CPU not recommended.')
 
+    with strategy.scope():
+        vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
+        embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
+        reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
+        e = None
+        if model_type == 'cnn':
+            e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+        else:
+            e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+        e.run()
+
+def cross_validation_thread_ah_delta_context3():
+    # classification with context
+    import random
+    random.seed(1234567)
+
+    import tensorflow as tf
+    if tf.test.is_gpu_available():
+        strategy = tf.distribute.MirroredStrategy()
+        print('Using GPU')
+    else:
+        raise ValueError('CPU not recommended.')
+
+    with strategy.scope():
+        vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
+        embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
+        reader = AHVersusDeltaThreadReader('data/sampled-threads-ah-delta-context3', True)
+        e = ClassificationExperiment(reader, StructuredSelfAttentiveSentenceEmbedding(vocabulary, embeddings, '/tmp/visualization-context3'), ClassificationEvaluator())
+        e.run()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
     args = parser.parse_args()
-    cross_validation_ah(args.model)
+    if args.model == 'ssase':
+        cross_validation_thread_ah_delta_context3()
+    else:
+        cross_validation_ah(args.model)
