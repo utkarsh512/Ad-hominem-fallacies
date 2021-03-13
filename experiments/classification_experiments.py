@@ -1,6 +1,6 @@
 from classifiers import AbstractTokenizedDocumentClassifier
 from embeddings import WordEmbeddings
-from nnclassifiers import StackedLSTMTokenizedDocumentClassifier
+from nnclassifiers import StackedLSTMTokenizedDocumentClassifier, CNNTokenizedDocumentClassifier
 from nnclassifiers_experimental import StructuredSelfAttentiveSentenceEmbedding
 from readers import JSONPerLineDocumentReader, AHVersusDeltaThreadReader
 from tcframework import LabeledTokenizedDocumentReader, AbstractEvaluator, Fold, TokenizedDocumentReader, \
