@@ -69,30 +69,29 @@ def cross_validation_ah():
     import random
     random.seed(1234567)
 
-    import tensorflow
+    import tensorflow as tf
 
-    sess_config = tensorflow.ConfigProto()
-    sess_config.gpu_options.allow_growth = True
-    from tensorflow.python.keras.backend import set_session
+    if tf.test.is_gpu_available():
+		strategy = tf.distribute.MirroredStrategy()
+		print('Using GPU')
+    else:
+		raise ValueError('Running on CPU is not recomended.')
 
-    set_session(tensorflow.Session(config=sess_config))
-
-    vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
-    embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
-
-    reader = JSONPerLineDocumentReader(
-        'data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json',
-        True)
-    # e = ClassificationExperiment(reader, RandomTokenizedDocumentClassifier(), ClassificationEvaluator())
+	# e = ClassificationExperiment(reader, RandomTokenizedDocumentClassifier(), ClassificationEvaluator())
     # e = ClassificationExperiment(reader, MajorityClassTokenizedDocumentClassifier(), ClassificationEvaluator())
     # e = ClassificationExperiment(reader, SimpleLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
-    e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings),
-                                 ClassificationEvaluator())
-    # e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
-    e.run()
-    # pass
 
+	with strategy.scope():
 
+    	vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
+    	embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
+
+    	reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
+		e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+		# e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+    	e.run()
+
+'''
 def cross_validation_thread_ah_delta_context3():
     import random
     random.seed(1234567)
@@ -114,8 +113,8 @@ def cross_validation_thread_ah_delta_context3():
                                  ClassificationEvaluator())
 
     e.run()
-
+'''
 
 if __name__ == '__main__':
     cross_validation_ah()
-    cross_validation_thread_ah_delta_context3()
+    # cross_validation_thread_ah_delta_context3()
