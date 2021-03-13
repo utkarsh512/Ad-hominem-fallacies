@@ -64,57 +64,25 @@ class ClassificationExperiment:
 
         return result
 
-
 def cross_validation_ah():
-    import random
-    random.seed(1234567)
+  import random
+  random.seed(1234567)
 
-    import tensorflow as tf
+  import tensorflow as tf
 
-    if tf.test.is_gpu_available():
-		strategy = tf.distribute.MirroredStrategy()
-		print('Using GPU')
-    else:
-		raise ValueError('Running on CPU is not recomended.')
+  if tf.test.is_gpu_available():
+    strategy = tf.distribute.MirroredStrategy()
+    print('Using GPU')
+  else:
+    raise ValueError('CPU not recommended.')
 
-	# e = ClassificationExperiment(reader, RandomTokenizedDocumentClassifier(), ClassificationEvaluator())
-    # e = ClassificationExperiment(reader, MajorityClassTokenizedDocumentClassifier(), ClassificationEvaluator())
-    # e = ClassificationExperiment(reader, SimpleLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
-
-	with strategy.scope():
-
-    	vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
-    	embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
-
-    	reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
-		e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
-		# e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
-    	e.run()
-
-'''
-def cross_validation_thread_ah_delta_context3():
-    import random
-    random.seed(1234567)
-
-    import tensorflow
-
-    sess_config = tensorflow.ConfigProto()
-    sess_config.gpu_options.allow_growth = True
-    from tensorflow.python.keras.backend import set_session
-    set_session(tensorflow.Session(config=sess_config))
-
+  with strategy.scope():
     vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
     embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
-
-    reader = AHVersusDeltaThreadReader('data/sampled-threads-ah-delta-context3', True)
-    e = ClassificationExperiment(reader,
-                                 StructuredSelfAttentiveSentenceEmbedding(
-                                     vocabulary, embeddings, '/tmp/visualization-context3'),
-                                 ClassificationEvaluator())
-
+    reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
+    e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
     e.run()
-'''
+
 
 if __name__ == '__main__':
-    cross_validation_ah()
-    # cross_validation_thread_ah_delta_context3()
+  cross_validation_ah()
