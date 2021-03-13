@@ -10,16 +10,16 @@ import os
 import numpy
 import tensorflow
 from tensorflow import Tensor
-from tensorflow.python.keras import Input
-from tensorflow.python.keras._impl.keras import backend
-from tensorflow.python.keras._impl.keras.layers import TimeDistributed, Lambda
-from tensorflow.python.keras._impl.keras.models import Sequential
-from tensorflow.python.keras._impl.keras.regularizers import Regularizer
-from tensorflow.python.keras._impl.keras.utils.layer_utils import print_summary
-from tensorflow.python.keras.layers import Flatten
-from tensorflow.python.keras.layers import LSTM, Dense, Bidirectional, Embedding
-from tensorflow.python.keras.losses import categorical_crossentropy
-from tensorflow.python.keras.models import Model
+from keras import Input
+from keras import backend
+from keras.layers import TimeDistributed, Lambda
+from keras.models import Sequential
+from keras.regularizers import Regularizer
+from keras.utils.layer_utils import print_summary
+from keras.layers import Flatten
+from keras.layers import LSTM, Dense, Bidirectional, Embedding
+from keras.losses import categorical_crossentropy
+from keras.models import Model
 
 from embeddings import WordEmbeddings
 from nnclassifiers import SimpleLSTMTokenizedDocumentClassifier, ConversionHelpers
