@@ -6,6 +6,7 @@ from readers import JSONPerLineDocumentReader, AHVersusDeltaThreadReader
 from tcframework import LabeledTokenizedDocumentReader, AbstractEvaluator, Fold, TokenizedDocumentReader, \
     TokenizedDocument, ClassificationEvaluator
 from vocabulary import Vocabulary
+import argparse
 
 
 class ClassificationExperiment:
@@ -64,7 +65,7 @@ class ClassificationExperiment:
 
         return result
 
-def cross_validation_ah():
+def cross_validation_ah(model_type):
   import random
   random.seed(1234567)
 
@@ -80,9 +81,16 @@ def cross_validation_ah():
     vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
     embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
     reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
-    e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+    e = None
+    if model_type == 'cnn':
+        e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+    else:
+        e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
     e.run()
 
 
 if __name__ == '__main__':
-  cross_validation_ah()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
+    args = parser.parse_args()
+    cross_validation_ah(args.model)
