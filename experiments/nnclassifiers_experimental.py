@@ -147,9 +147,7 @@ class StructuredSelfAttentiveSentenceEmbedding(SimpleLSTMTokenizedDocumentClassi
         penalization_coefficient = 0
 
         # now do the softmax over rows, not the columns
-        annotation_matrix_a = Lambda(lambda x: tensorflow.nn.softmax(x, dim=1), name='A_softmax',
-                                     activity_regularizer=PRegularizer(penalization_coefficient))(
-            annotation_matrix_a_linear)
+        annotation_matrix_a = Lambda(lambda x: tensorflow.nn.softmax(x), name='A_softmax', activity_regularizer=PRegularizer(penalization_coefficient))(annotation_matrix_a_linear)
 
         # multiplication: easier to use Lambda than Multiply
         matrix_m = Lambda(lambda x: tensorflow.matmul(x[0], x[1], transpose_a=True), name='M_matrix')(
