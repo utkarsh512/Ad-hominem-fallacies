@@ -3,14 +3,14 @@ import random
 from datetime import datetime
 import numpy
 import sys
-from tensorflow.python.keras import Input
-from tensorflow.python.keras._impl.keras.layers import Bidirectional
-from tensorflow.python.keras.layers import Conv1D, GlobalMaxPooling1D
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.layers import Embedding, LSTM, Concatenate, Dropout
-from tensorflow.python.keras.losses import mean_squared_error, categorical_crossentropy
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.preprocessing import sequence
+from keras import Input
+from keras.layers import Bidirectional
+from keras.layers import Conv1D, GlobalMaxPooling1D
+from keras.layers import Dense
+from keras.layers import Embedding, LSTM, Concatenate, Dropout
+from keras.losses import mean_squared_error, categorical_crossentropy
+from keras.models import Model
+from keras.preprocessing import sequence
 
 from classifiers import AbstractTokenizedDocumentRegression, AbstractTokenizedDocumentClassifier
 from embeddings import WordEmbeddings
