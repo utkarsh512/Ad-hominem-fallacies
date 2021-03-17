@@ -6,7 +6,7 @@ from nnclassifiers import StackedLSTMTokenizedDocumentClassifier, CNNTokenizedDo
 from nnclassifiers_experimental import StructuredSelfAttentiveSentenceEmbedding
 from readers import JSONPerLineDocumentReader, AHVersusDeltaThreadReader
 from tcframework import LabeledTokenizedDocumentReader, AbstractEvaluator, Fold, TokenizedDocumentReader, \
-    TokenizedDocument, ClassificationEvaluator
+    TokenizedDocument, ClassificationEvaluator, Comment
 from vocabulary import Vocabulary
 import argparse
 
