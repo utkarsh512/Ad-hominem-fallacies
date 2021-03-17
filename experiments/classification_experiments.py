@@ -61,8 +61,9 @@ class ClassificationExperiment:
         result = dict()
         for instance, prediction in zip(instances, predictions):
             assert isinstance(instance, TokenizedDocument)
-            assert isinstance(prediction, float)
+            # assert isinstance(prediction, float)
             # get id and put the label to the resulting dictionary
+            # cur_text = ' '.join(instance.tokens)
             result[instance.id] = prediction
 
         return result
@@ -108,8 +109,48 @@ def cross_validation_thread_ah_delta_context3():
         reader = AHVersusDeltaThreadReader('data/sampled-threads-ah-delta-context3', True)
         e = ClassificationExperiment(reader, StructuredSelfAttentiveSentenceEmbedding(vocabulary, embeddings, '/tmp/visualization-context3'), ClassificationEvaluator())
         e.run()
+'''
+class ClassifiedComments:
+    def __init__(self):
+        self.text = None
+        self.bert_label = None
+        self.bert_score = None
+        self.model_label = None
+        self.model_score = None
 
-if __name__ == '__main__':
+    def fill(self, text, bert_label, bert_score, model_label, model
+'''
+
+def classify_random_comments(model_type, indir, outdir):
+    # classification of random comments in 'AH' / 'None' (without context)
+    import random
+    random.seed(1234567)
+
+    import tensorflow as tf
+    if tf.test.is_gpu_available():
+        strategy = tf.distribute.MirroredStrategy()
+        print('Using GPU')
+    else:
+        raise ValueError('CPU not recommended.')
+
+    with strategy.scope():
+        vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
+        embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
+        reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
+        e = None
+        if model_type == 'cnn':
+            e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+        else:
+            e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
+        # e.run()
+        rnd_comments = TokenizedDocumentReader(indir)
+        result = e.label_external(rnd_comments)
+    for k in result.keys():
+        print(f'{k}: {result[k]}')
+        
+        
+
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
     args = parser.parse_args()
@@ -117,3 +158,15 @@ if __name__ == '__main__':
         cross_validation_thread_ah_delta_context3()
     else:
         cross_validation_ah(args.model)
+
+def main2():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
+    parser.add_argument("--indir", default=None, type=str, required=True, help="Location of dumped comments (after being classified by Bert)")
+    parser.add_argument("--outdir", default=None, type=str, required=True, help="Location of comments classifed by baseline models")
+    args = parser.parse_args()
+    classify_random_comments(args.model, args.indir, args.outdir)
+
+if __name__ == '__main__':
+    main2()
+    
