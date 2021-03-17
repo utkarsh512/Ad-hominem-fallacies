@@ -100,12 +100,14 @@ class TokenizedDocumentReader:
 
         e = Comment('lol', 'ah', 0)
         f = open(input_path, 'rb')
+        count = 0
         try:
             while True:
+                count += 1
                 e = pickle.load(f)
                 print(e)
                 ee = TokenizedDocument()
-                cid = 'Bert_Class_' + e.label + '_Score_' + str(e.score)
+                cid = 'Bert_Class_' + e.label + '_Score_' + str(e.score) + '_id_' + str(count)
                 ctokens = e.text.strip().split()
                 ee.id = cid
                 ee.tokens = ctokens
