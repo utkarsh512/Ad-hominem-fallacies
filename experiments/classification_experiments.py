@@ -65,8 +65,8 @@ class ClassificationExperiment:
             assert isinstance(instance, TokenizedDocument)
             # assert isinstance(prediction, float)
             # get id and put the label to the resulting dictionary
-            # cur_text = ' '.join(instance.tokens)
-            result[instance.id] = (prediction, prob)
+            cur_text = ' '.join(instance.tokens)
+            result[instance.id] = (cur_text, prediction, prob)
 
         return result
 
@@ -170,12 +170,12 @@ def classify_random_comments(model_type, indir, outdir):
     writer_addr = os.path.join(outdir, fname)
     writer = open(writer_addr, 'wb')
     for key in result.keys():
-        model_label, model_score = result[key]
+        text, model_label, model_score = result[key]
         key_list = key.split('_')
         bert_label = key_list[2]
         bert_score = int(key_list[4])
         e = ClassifiedComment()
-        e.fill(bert_label, bert_score, model_label, model_score)
+        e.fill(text, bert_label, bert_score, model_label, model_score)
         print(e)
         pickle.dump(e, writer)
     writer.close()
