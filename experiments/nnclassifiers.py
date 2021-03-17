@@ -113,7 +113,7 @@ class SimpleLSTMTokenizedDocumentClassifier(AbstractTokenizedDocumentClassifier)
             # assign field
             self._model = model
 
-    def test(self, document_list: list, **kwargs) -> list:
+    def test(self, document_list: list, **kwargs) -> tuple:
         assert self._int_to_label_map
         assert isinstance(self._int_to_label_map, dict)
 
@@ -133,7 +133,7 @@ class SimpleLSTMTokenizedDocumentClassifier(AbstractTokenizedDocumentClassifier)
 
         result = ConversionHelpers.convert_predicted_prob_dist_to_label(model_predict, self._int_to_label_map)
 
-        return result
+        return (result, model_predict)
 
     def get_model(self, numpy_matrix_embeddings: numpy.ndarray, **kwargs) -> Model:
         # get default parameters
