@@ -107,8 +107,8 @@ class TokenizedDocumentReader:
                 ee = TokenizedDocument()
                 cid = 'Bert_Class_' + e.label + '_Score_' + str(e.score)
                 ctokens = e.text.strip().split()
-                ee.id(cid)
-                ee.tokens(ctokens)
+                ee.id = cid
+                ee.tokens = ctokens
                 print(ee)
                 print('-' * 20)
                 instances.append(ee)
