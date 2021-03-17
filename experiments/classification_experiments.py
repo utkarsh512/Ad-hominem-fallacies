@@ -8,7 +8,9 @@ from readers import JSONPerLineDocumentReader, AHVersusDeltaThreadReader
 from tcframework import LabeledTokenizedDocumentReader, AbstractEvaluator, Fold, TokenizedDocumentReader, \
     TokenizedDocument, ClassificationEvaluator, Comment
 from vocabulary import Vocabulary
-import argparse
+import argparse, os
+import numpy as np
+import pickle
 
 
 class ClassificationExperiment:
@@ -109,8 +111,8 @@ def cross_validation_thread_ah_delta_context3():
         reader = AHVersusDeltaThreadReader('data/sampled-threads-ah-delta-context3', True)
         e = ClassificationExperiment(reader, StructuredSelfAttentiveSentenceEmbedding(vocabulary, embeddings, '/tmp/visualization-context3'), ClassificationEvaluator())
         e.run()
-'''
-class ClassifiedComments:
+        
+class ClassifiedComment:
     def __init__(self):
         self.text = None
         self.bert_label = None
@@ -118,8 +120,24 @@ class ClassifiedComments:
         self.model_label = None
         self.model_score = None
 
-    def fill(self, text, bert_label, bert_score, model_label, model
-'''
+    def fill(self, text, bert_label, bert_score, model_label, model_score):
+        self.text = text
+        self.bert_label = bert_label.lower()
+        self.bert_score = bert_score
+        self.model_label = model_label.lower()
+        if self.model_label == 'ah':
+            self.model_score = int(abs(model_score[1] - 0.5) * 200)
+        else:
+            self.model_score = int(abs(model_score[0] - 0.5) * 200)
+
+    def __lt__(self, other):
+        return self.bert_score < other.bert_score
+
+    def __str__(self):
+        s = 'Comment: ' + self.text + '\n'
+        s += 'Bert label: ' + self.bert_label + ' - Confidence: ' + str(self.bert_score) + '\n'
+        s += 'Model label: ' + self.model_label + ' - Confidence: ' + str(self.model_score)
+        return s
 
 def classify_random_comments(model_type, indir, outdir):
     # classification of random comments in 'AH' / 'None' (without context)
@@ -148,9 +166,23 @@ def classify_random_comments(model_type, indir, outdir):
     for k in result.keys():
         print(f'{k}: {result[k]}')
         
+    fname = model_type + '.log'
+    writer_addr = os.path.join(outdir, fname)
+    writer = open(writer_addr, 'wb')
+    for key in result.keys():
+        model_label, model_score = result[key]
+        key_list = key.split('_')
+        bert_label = key_list[2]
+        bert_score = int(key_list[4])
+        e = ClassifiedComment()
+        e.fill(bert_label, bert_score, model_label, model_score)
+        print(e)
+        pickle.dump(e, writer)
+    writer.close()
         
 
 def main():
+    # For supervised learning task (with or without context)
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
     args = parser.parse_args()
@@ -160,6 +192,7 @@ def main():
         cross_validation_ah(args.model)
 
 def main2():
+    # For unsupervised task (without context only)
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
     parser.add_argument("--indir", default=None, type=str, required=True, help="Location of dumped comments (after being classified by Bert)")
