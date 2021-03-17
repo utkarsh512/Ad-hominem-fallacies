@@ -201,5 +201,6 @@ def main2():
     classify_random_comments(args.model, args.indir, args.outdir)
 
 if __name__ == '__main__':
-    main2()
+    main()
+    # main2()
     
