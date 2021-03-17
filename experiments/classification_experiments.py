@@ -56,15 +56,15 @@ class ClassificationExperiment:
         self.classifier.train(self.reader.train, validation=False)
         instances = document_reader.instances
 
-        predictions = self.classifier.test(instances)
-
+        predictions, probs = self.classifier.test(instances)
+        probs = list(probs)
         result = dict()
-        for instance, prediction in zip(instances, predictions):
+        for instance, prediction, prob in zip(instances, predictions, probs):
             assert isinstance(instance, TokenizedDocument)
             # assert isinstance(prediction, float)
             # get id and put the label to the resulting dictionary
             # cur_text = ' '.join(instance.tokens)
-            result[instance.id] = prediction
+            result[instance.id] = (prediction, prob)
 
         return result
 
