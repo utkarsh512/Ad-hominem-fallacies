@@ -2,6 +2,20 @@ import random
 
 from ConfusionMatrix import ConfusionMatrix
 
+class Comment:
+    def __init__(self, text, label, score):
+        self.text = text
+        self.label = label
+        self.score = score
+
+    def __lt__(self, other):
+        return self.score < other.score
+    
+    def __str__(self):
+        s = 'Comment: ' + self.text + '\n'
+        s += 'Label: ' + self.label + ' - Confidence: ' + str(self.score)
+        return s
+
 
 class TokenizedDocument:
     def __init__(self):
@@ -79,7 +93,30 @@ class TokenizedDocumentReader:
                 print("Warning: instance contains only a single token: " % instance.tokens)
 
     def read_instances(self, input_path: str, instances_limit: int = -1) -> list:
-        pass
+        # reading the random comments and converting them to this object
+        instances = list()
+
+        import pickle
+
+        e = Comment('lol', 'ah', 0)
+        f = open(input_path, 'rb')
+        try:
+            while True:
+                e = pickle.load(f)
+                print(e)
+                ee = TokenizedDocument()
+                cid = 'Bert_Class_' + e.label + '_Score_' + str(e.score)
+                ctokens = e.text.strip().split()
+                ee.id(cid)
+                ee.tokens(ctokens)
+                print(ee)
+                print('-' * 20)
+                instances.append(ee)
+        except EOFError:
+            f.close()
+
+        return instances
+            
 
 
 class LabeledTokenizedDocumentReader:
