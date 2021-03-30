@@ -162,8 +162,16 @@ def train_test_model_no_context(model_type, train_dir, indir, outdir):
     
     for key in result.keys():
         model_label, model_score = result[key]
-        instances[key].add_model(model_type, model_label, model_score, None)
-        print(instances[key])
+        model_label = model_label.lower()
+        score = model_score[0]
+        if model_label == 'none':
+            score = model_score[1]
+        instances[key].add_model(model_type, model_label, score, None)
+        e = instances[key]
+        print(e)
+        print(e.labels)
+        print(e.scores)
+        print('=' * 20)
         pickle.dump(instances[key], f)
         
     f.close()
