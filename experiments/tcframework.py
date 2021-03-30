@@ -1,20 +1,7 @@
 import random
-
+import pickle
 from ConfusionMatrix import ConfusionMatrix
-
-class Comment:
-    def __init__(self, text, label, score):
-        self.text = text
-        self.label = label
-        self.score = score
-
-    def __lt__(self, other):
-        return self.score < other.score
-    
-    def __str__(self):
-        s = 'Comment: ' + self.text + '\n'
-        s += 'Label: ' + self.label + ' - Confidence: ' + str(self.score)
-        return s
+from comment import Comment
 
 
 class TokenizedDocument:
@@ -96,6 +83,30 @@ class TokenizedDocumentReader:
         # reading the random comments and converting them to this object
         instances = list()
 
+        e = Comment(-1, 'lol', 'ah')
+        f = open(input_path, 'rb')
+        count = 0
+
+        try:
+            while True:
+                count += 1
+                e = pickle.load(f)
+                print(e)
+                ee = TokenizedDocument()
+                ee.id = str(e.id)
+                ee.tokens = e.text.strip().split()
+                print(ee)
+                print('-' * 30)
+                instances.append(ee)
+        except EOFError:
+            f.close()
+
+        return instances
+
+    '''
+        
+        instances = list()
+
         import pickle
 
         e = Comment('lol', 'ah', 0)
@@ -118,6 +129,8 @@ class TokenizedDocumentReader:
             f.close()
 
         return instances
+
+        '''
             
 
 
