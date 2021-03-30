@@ -163,9 +163,9 @@ def train_test_model_no_context(model_type, train_dir, indir, outdir):
     for key in result.keys():
         model_label, model_score = result[key]
         model_label = model_label.lower()
-        score = model_score[0]
+        score = model_score[1]
         if model_label == 'none':
-            score = model_score[1]
+            score = model_score[0]
         instances[key].add_model(model_type, model_label, score, None)
         e = instances[key]
         print(e)
