@@ -113,6 +113,64 @@ def cross_validation_thread_ah_delta_context3():
         e = ClassificationExperiment(reader, StructuredSelfAttentiveSentenceEmbedding(vocabulary, embeddings, '/tmp/visualization-context3'), ClassificationEvaluator())
         e.run()
 
+def train_test_model_with_context(train_dir, indir, outdir):
+    '''Custom training and testing SSAE model
+    :param train_dir: Path to JSON file containing training examples
+    :param indir: Path to LOG file containing examples as Comment() object (which has already been classified by Bert)
+    :param outdir: Path to LOG file to be created by adding prediction of this model as well'''
+
+    import random
+    random.seed(1234567)
+
+    import tensorflow as tf
+    if tf.test.is_gpu_available():
+        strategy = tf.distribute.MirroredStrategy()
+        print('Using GPU')
+    else:
+        raise ValueError('CPU not recommended.')
+
+    with strategy.scope():
+        vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
+        embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
+        reader = JSONPerLineDocumentReader(train_dir, True)
+        e = ClassificationExperiment(reader, StructuredSelfAttentiveSentenceEmbedding(vocabulary, embeddings), ClassificationEvaluator())
+        test_comments = TokenizedDocumentReader(indir)
+        result = e.label_external(test_comments)
+
+    for k in result.keys():
+        print(f'{k}: {result[k]}')
+
+    instances = dict()
+
+    e = Comment(-1, 'lol', 'ah')
+    f = open(indir, 'rb')
+
+    try:
+        while True:
+            e = pickle.load(f)
+            print(e)
+            instances[str(e.id)] = e
+    except EOFError:
+        f.close()
+
+    f = open(outdir, 'wb')
+    
+    for key in result.keys():
+        model_label, model_score = result[key]
+        model_label = model_label.lower()
+        score = model_score[1]
+        if model_label == 'none':
+            score = model_score[0]
+        instances[key].add_model(model_type, model_label, score, None)
+        e = instances[key]
+        print(e)
+        print(e.labels)
+        print(e.scores)
+        print('=' * 20)
+        pickle.dump(instances[key], f)
+        
+    f.close()
+
 
 def train_test_model_no_context(model_type, train_dir, indir, outdir):
     # Training and testing CNN / BiLSTM model on custom data
@@ -175,6 +233,15 @@ def train_test_model_no_context(model_type, train_dir, indir, outdir):
         pickle.dump(instances[key], f)
         
     f.close()
+
+def main3():
+    # Custom training and testing for context-model (SSAE)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train_dir", default=None, type=str, required=True, help="Path to JSON file containing training examples")
+    parser.add_argument("--indir", default=None, type=str, required=True, help="Path to LOG file containing examples as Comment() object (which has already been classified by Bert)")
+    parser.add_argument("--outdir", default=None, type=str, required=True, help="Path to LOG file to be created by adding prediction of this model as well")
+    args = parser.parse_args()
+    train_test_model_with_context(args.train_dir, args.indir, args.outdir)
         
 def main2():
     # Custom training and testing for no-context models
