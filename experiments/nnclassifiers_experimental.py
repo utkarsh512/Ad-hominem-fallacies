@@ -175,6 +175,7 @@ class StructuredSelfAttentiveSentenceEmbedding(SimpleLSTMTokenizedDocumentClassi
     def test(self, document_list: list, **kwargs) -> list:
         result = super().test(document_list)
 
+        '''
         # here we need only the word indices, not the labels
         x_test = ConversionHelpers.convert_all_instances_to_x_vectors(document_list, self._max_length, self._vocabulary)
 
@@ -248,6 +249,7 @@ class StructuredSelfAttentiveSentenceEmbedding(SimpleLSTMTokenizedDocumentClassi
         # print(lstm2_output)
         #
         # self.debug_weights_with_words(document_list, a_matrix_output)
+        '''
 
         return result
 
