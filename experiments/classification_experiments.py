@@ -1,4 +1,4 @@
-# modified for GPU by Utkarsh Patel
+# modified for custom training and testing on GPU by Utkarsh Patel
 
 from classifiers import AbstractTokenizedDocumentClassifier
 from embeddings import WordEmbeddings
@@ -6,7 +6,8 @@ from nnclassifiers import StackedLSTMTokenizedDocumentClassifier, CNNTokenizedDo
 from nnclassifiers_experimental import StructuredSelfAttentiveSentenceEmbedding
 from readers import JSONPerLineDocumentReader, AHVersusDeltaThreadReader
 from tcframework import LabeledTokenizedDocumentReader, AbstractEvaluator, Fold, TokenizedDocumentReader, \
-    TokenizedDocument, ClassificationEvaluator, Comment
+    TokenizedDocument, ClassificationEvaluator
+from comment import Comment
 from vocabulary import Vocabulary
 import argparse, os
 import numpy as np
@@ -66,7 +67,7 @@ class ClassificationExperiment:
             # assert isinstance(prediction, float)
             # get id and put the label to the resulting dictionary
             cur_text = ' '.join(instance.tokens)
-            result[instance.id] = (cur_text, prediction, prob)
+            result[instance.id] = (prediction, prob)
 
         return result
 
@@ -111,36 +112,14 @@ def cross_validation_thread_ah_delta_context3():
         reader = AHVersusDeltaThreadReader('data/sampled-threads-ah-delta-context3', True)
         e = ClassificationExperiment(reader, StructuredSelfAttentiveSentenceEmbedding(vocabulary, embeddings, '/tmp/visualization-context3'), ClassificationEvaluator())
         e.run()
-        
-class ClassifiedComment:
-    def __init__(self):
-        self.text = None
-        self.bert_label = None
-        self.bert_score = None
-        self.model_label = None
-        self.model_score = None
 
-    def fill(self, text, bert_label, bert_score, model_label, model_score):
-        self.text = text
-        self.bert_label = bert_label.lower()
-        self.bert_score = bert_score
-        self.model_label = model_label.lower()
-        if self.model_label == 'ah':
-            self.model_score = int(abs(model_score[1] - 0.5) * 200)
-        else:
-            self.model_score = int(abs(model_score[0] - 0.5) * 200)
 
-    def __lt__(self, other):
-        return self.bert_score < other.bert_score
+def train_test_model_no_context(model_type, train_dir, indir, outdir):
+    # Training and testing CNN / BiLSTM model on custom data
+    # :param train_dir: Path to JSON file containing training examples
+    # :param indir: Path to LOG file containing examples as Comment() object (which has already been classified by Bert)
+    # :param outdir: Path to LOG file to be created by adding prediction of this model as well
 
-    def __str__(self):
-        s = 'Comment: ' + self.text + '\n'
-        s += 'Bert label: ' + self.bert_label + ' - Confidence: ' + str(self.bert_score) + '\n'
-        s += 'Model label: ' + self.model_label + ' - Confidence: ' + str(self.model_score)
-        return s
-
-def classify_random_comments(model_type, indir, outdir):
-    # classification of random comments in 'AH' / 'None' (without context)
     import random
     random.seed(1234567)
 
@@ -154,35 +133,53 @@ def classify_random_comments(model_type, indir, outdir):
     with strategy.scope():
         vocabulary = Vocabulary.deserialize('en-top100k.vocabulary.pkl.gz')
         embeddings = WordEmbeddings.deserialize('en-top100k.embeddings.pkl.gz')
-        reader = JSONPerLineDocumentReader('data/experiments/ah-classification1/exported-3621-sampled-positive-negative-ah-no-context.json', True)
+        reader = JSONPerLineDocumentReader(train_dir, True)
         e = None
         if model_type == 'cnn':
             e = ClassificationExperiment(reader, CNNTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
         else:
             e = ClassificationExperiment(reader, StackedLSTMTokenizedDocumentClassifier(vocabulary, embeddings), ClassificationEvaluator())
         # e.run()
-        rnd_comments = TokenizedDocumentReader(indir)
-        result = e.label_external(rnd_comments)
+        test_comments = TokenizedDocumentReader(indir)
+        result = e.label_external(test_comments)
     for k in result.keys():
         print(f'{k}: {result[k]}')
-        
-    fname = model_type + '.log'
-    writer_addr = os.path.join(outdir, fname)
-    writer = open(writer_addr, 'wb')
+
+    instances = dict()
+
+    e = Comment(-1, 'lol', 'ah')
+    f = open(indir, 'rb')
+
+    try:
+        while True:
+            e = pickle.load(f)
+            print(e)
+            instances[str(e.id)] = e
+    except EOFError:
+        f.close()
+
+    f = open(outdir, 'wb')
+    
     for key in result.keys():
-        text, model_label, model_score = result[key]
-        key_list = key.split('_')
-        bert_label = key_list[2]
-        bert_score = int(key_list[4])
-        e = ClassifiedComment()
-        e.fill(text, bert_label, bert_score, model_label, model_score)
-        print(e)
-        pickle.dump(e, writer)
-    writer.close()
+        model_label, model_score = result[key]
+        instances[key].add_model(model_type, model_label, model_score, None)
+        print(instances[key])
+        pickle.dump(instances[key], f)
         
+    f.close()
+        
+def main2():
+    # Custom training and testing for no-context models
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
+    parser.add_argument("--train_dir", default=None, type=str, required=True, help="Path to JSON file containing training examples")
+    parser.add_argument("--indir", default=None, type=str, required=True, help="Path to LOG file containing examples as Comment() object (which has already been classified by Bert)")
+    parser.add_argument("--outdir", default=None, type=str, required=True, help="Path to LOG file to be created by adding prediction of this model as well")
+    args = parser.parse_args()
+    train_test_model_no_context(args.model, args.train_dir, args.indir, args.outdir)
 
 def main():
-    # For supervised learning task (with or without context)
+    # For supervised learning task (with or without context) as described in the paper
     parser = argparse.ArgumentParser()
     parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
     args = parser.parse_args()
@@ -191,16 +188,7 @@ def main():
     else:
         cross_validation_ah(args.model)
 
-def main2():
-    # For unsupervised task (without context only)
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default=None, type=str, required=True, help="Model used for classification")
-    parser.add_argument("--indir", default=None, type=str, required=True, help="Location of dumped comments (after being classified by Bert)")
-    parser.add_argument("--outdir", default=None, type=str, required=True, help="Location of comments classifed by baseline models")
-    args = parser.parse_args()
-    classify_random_comments(args.model, args.indir, args.outdir)
 
 if __name__ == '__main__':
-    main()
-    # main2()
-    
+    # main()
+    main2()
